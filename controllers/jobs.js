@@ -44,7 +44,32 @@ const createJob = async (req, res) => {
 };
 
 const updateJob = async (req, res) => {
-  res.send("updateJob user");
+  // istekten gelen bilgileri alıyoruz
+  const {
+    body: { company, position },
+    user: { userId },
+    params: { id: jobId },
+  } = req;
+
+  // aldığımız bilgiler arasında company veya position boş ise hata gönderiyoruz
+  if (company === "" || position === "") {
+    throw new BadRequestError("Company or Position fields cannot be empty");
+  }
+
+  // Sonrasında istekten gelen id ve userId'sine sahip objeyi bulduktan sonra istek body içerisindeki bilgiler ile güncelliyoruz.
+  const job = await Job.findByIdAndUpdate(
+    { _id: jobId, createdBy: userId },
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  // Eğer obje bulunmaz ise hata gönderiyoruz.
+  if (!job) {
+    throw new NotFoundError(`No job with id ${jobId}`);
+  }
+
+  // Var ise güncellenmiş objeyi cevap olarak dönüyoruz.
+  res.status(StatusCodes.OK).json({ job });
 };
 
 const deleteJob = async (req, res) => {
