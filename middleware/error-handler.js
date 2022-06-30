@@ -1,10 +1,41 @@
-const { CustomAPIError } = require('../errors')
-const { StatusCodes } = require('http-status-codes')
+// const { CustomAPIError } = require("../errors");
+const { StatusCodes } = require("http-status-codes");
 const errorHandlerMiddleware = (err, req, res, next) => {
-  if (err instanceof CustomAPIError) {
-    return res.status(err.statusCode).json({ msg: err.message })
-  }
-  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
-}
+  let customError = {
+    // set default
+    statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+    msg: err.message || "Something went wrong try again later",
+  };
 
-module.exports = errorHandlerMiddleware
+  // if (err instanceof CustomAPIError) {
+  //   return res.status(err.statusCode).json({ msg: err.message });
+  // }
+
+  // Eğer err.name değeri "ValidationError" ise,
+  if (err.name === "ValidationError") {
+    // Önce err.errors objesinin içerisindeki değerleri al ve array oluştur. Sonra map() metodu ile her bir message değişkenini al ve değerlerini birleştirip customError.msg özelliğine ata.
+    customError.msg = Object.values(err.errors)
+      .map((item) => item.message)
+      .join(",");
+
+    customError.statusCode = 400;
+  }
+
+  if (err.code && err.code === 11000) {
+    customError.msg = `Duplicate value entered for ${Object.keys(
+      err.keyValue
+    )} field, please choose another value`;
+
+    customError.statusCode = 400;
+  }
+
+  if (err.name === "CastError") {
+    customError.msg = `No item found with id : ${err.value}`;
+    customError.statusCode = 404;
+  }
+
+  // return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err });
+  return res.status(customError.statusCode).json({ msg: customError.msg });
+};
+
+module.exports = errorHandlerMiddleware;
