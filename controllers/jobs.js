@@ -11,7 +11,25 @@ const getAllJobs = async (req, res) => {
 };
 
 const getJob = async (req, res) => {
-  res.send("Get Single Job");
+  // istekten gelen params id'sini ve şuan giriş yapmış user'ın bilgilerini alıyoruz.
+  const {
+    user: { userId },
+    params: { id: jobId },
+  } = req;
+
+  // Sonrasında Job koleksiyonumuzun içerisinde gelen id'ye ve createdBy id'sine sahip job objesini buluyoruz.
+  const job = await Job.findOne({
+    _id: jobId,
+    createdBy: userId,
+  });
+
+  // Eğer yoksa hata gönderiyoruz
+  if (!job) {
+    throw new NotFoundError(`No job with id ${jobId}`);
+  }
+
+  // Var ise cevap olarak dönüyoruz.
+  res.status(StatusCodes.OK).json({ job });
 };
 
 const createJob = async (req, res) => {
