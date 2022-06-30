@@ -3,7 +3,11 @@ const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, NotFoundError } = require("../errors");
 
 const getAllJobs = async (req, res) => {
-  res.send("Get All Jobs");
+  // Middlewareden kullanıcı doğrulamasından sonra gelen userId sine göre filtreleme yapıyoruz ve sonrasında gelen bilgileri büyükten küçüğe doğru sıralayıp jobs objesine atıyoruz.
+  const jobs = await Job.find({ createdBy: req.user.userId }).sort("createdAt");
+
+  // cevap olarak da jobs objesini ve jobs objesinin boyutunu json formatında gönderiyoruz.
+  res.status(StatusCodes.OK).json({ jobs, count: jobs.length });
 };
 
 const getJob = async (req, res) => {
