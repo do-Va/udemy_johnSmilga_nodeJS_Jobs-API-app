@@ -31,6 +31,7 @@ UserSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+// user'ın id'sini ve name'ini alıp json token oluşturuyoruz ve token'ı dönüyoruz.
 UserSchema.methods.createJWT = function () {
   return jwt.sign(
     { userId: this._id, name: this.name },
@@ -39,6 +40,14 @@ UserSchema.methods.createJWT = function () {
       expiresIn: process.env.JWT_LIFETIME,
     }
   );
+};
+
+// Şifreleri karşılaştır.
+UserSchema.methods.comparePassword = async function (canditatePassword) {
+  // parametre ile gelen şifreyi bcrypte çevirip var olan şifre ile karşılaştırıyoruz. Eğer doğruysa true değilse false dönüyoruz.
+  const isMatch = await bcrypt.compare(canditatePassword, this.password);
+
+  return isMatch;
 };
 
 module.exports = mongoose.model("User", UserSchema);
