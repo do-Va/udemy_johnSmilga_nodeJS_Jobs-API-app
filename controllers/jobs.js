@@ -73,7 +73,24 @@ const updateJob = async (req, res) => {
 };
 
 const deleteJob = async (req, res) => {
-  res.send("deleteJob user");
+  const {
+    user: { userId },
+    params: { id: jobId },
+  } = req;
+
+  // İstekten gelen bilgilere ait objeyi bulduktan sonra siliyoruz.
+  const job = await Job.findByIdAndRemove({
+    _id: jobId,
+    createdBy: userId,
+  });
+
+  // Eğer obje bulunmaz ise hata gönderiyoruz.
+  if (!job) {
+    throw new NotFoundError(`No job with id ${jobId}`);
+  }
+
+  // Var ise silip statuscode 200 dönüyoruz.
+  res.status(StatusCodes.OK).send();
 };
 
 module.exports = {
